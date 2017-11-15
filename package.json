@@ -1,0 +1,32 @@
+{
+  "name": "app-harekeeper",
+  "version": "0.2.0",
+  "description": "Devebot rabbit/hare keeper layerware",
+  "homepage": "https://github.com/apporo/app-harekeeper.git",
+  "author": {
+    "name": "apporo",
+    "email": "apporo@devebot.com",
+    "url": "https://github.com/apporo"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": "0.10 || 0.11 || 0.12 || 4"
+  },
+  "keywords": [
+    "devebot",
+    "devebot-plugin"
+  ],
+  "peerDependencies": {
+    "app-webweaver": "^0.2.1",
+    "devebot": "^0.2.2"
+  },
+  "dependencies": {
+    "app-webweaver": "^0.2.1",
+    "devebot": "^0.2.2",
+    "opflow": "^0.1.7"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.5.3"
+  }
+}
