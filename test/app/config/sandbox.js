@@ -9,13 +9,13 @@ module.exports = {
           recyclebinName: 'app-harekeeper-recyclebin',
           applicationId: 'appHarekeeperLab',
           __metadata: {
-            description: 'Recyclebin for ReportAPI service'
+            description: 'Recyclebin for demo service'
           }
         }
       }
     },
     appWebweaver: {
-      defaultRedirectUrl: '/index'
+      defaultRedirectUrl: '/harekeeper/index'
     }
   }
 };
