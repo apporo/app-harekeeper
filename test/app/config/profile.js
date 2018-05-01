@@ -7,7 +7,7 @@ module.exports = {
         json: false,
         timestamp: true,
         colorize: true
-      },
+      }
     }
   }
 };

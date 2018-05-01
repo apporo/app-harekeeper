@@ -3,7 +3,7 @@
 var Devebot = require('devebot');
 var Promise = Devebot.require('bluebird');
 var lodash = Devebot.require('lodash');
-var debugx =  Devebot.require('debug')('appHarekeeper:trigger');
+var debugx = Devebot.require('pinbug')('app-harekeeper:trigger');
 var opflow = require('opflow');
 
 var Service = function(params) {
@@ -21,7 +21,7 @@ var Service = function(params) {
   
   lodash.forOwn(recyclerCfg, function(config, name) {
     if (lodash.isObject(config) && !lodash.isEmpty(config) && config.enabled !== false) {
-      LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+      LX.has('debug') && LX.log('debug', LT.add({
         message: 'Register a recycler handler',
         recyclerName: name
       }).toMessage({reset: true}));
@@ -35,7 +35,7 @@ var Service = function(params) {
 
   Object.defineProperty(self, 'recyclerStore', {
     get: function() {
-      LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+      LX.has('debug') && LX.log('debug', LT.add({
         message: 'Get recyclerStore',
         recyclerNames: lodash.keys(recyclerStore)
       }).toMessage());

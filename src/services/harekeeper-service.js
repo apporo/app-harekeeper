@@ -6,7 +6,7 @@ var path = require('path');
 var Devebot = require('devebot');
 var Promise = Devebot.require('bluebird');
 var lodash = Devebot.require('lodash');
-var debugx = Devebot.require('debug')('appHarekeeper:service');
+var debugx = Devebot.require('pinbug')('app-harekeeper:service');
 
 var Service = function(params) {
   debugx.enabled && debugx(' + constructor begin ...');
@@ -49,7 +49,7 @@ var Service = function(params) {
 
   router.route('/:recyclebin').get(function(req, res, next) {
     debugx.enabled && debugx(' - GET [%s]', req.url);
-    LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+    LX.has('debug') && LX.log('debug', LT.add({
       message: 'Get recyclebin information',
       recyclebin: req.params.recyclebin
     }).toMessage());
@@ -60,7 +60,7 @@ var Service = function(params) {
     }).catch(function(err) {
       res.status(400).json(err);
     }).finally(function() {
-      LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+      LX.has('debug') && LX.log('debug', LT.add({
         message: 'Get recyclebin information - DONE',
         recyclebin: req.params.recyclebin
       }).toMessage());
@@ -72,7 +72,7 @@ var Service = function(params) {
   topMsgRoute.get(function(req, res, next) {
     var binName = req.params.recyclebin;
     var garbageMsg = {};
-    LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+    LX.has('debug') && LX.log('debug', LT.add({
       message: 'Load top message',
       recyclebin: binName
     }).toMessage());
@@ -104,7 +104,7 @@ var Service = function(params) {
     }).catch(function(err) {
       res.status(400).json(err);
     }).finally(function() {
-      LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+      LX.has('debug') && LX.log('debug', LT.add({
         message: 'Load top message - DONE',
         recyclebin: binName
       }).toMessage());
@@ -123,7 +123,7 @@ var Service = function(params) {
     }
 
     var binName = req.params.recyclebin;
-    LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+    LX.has('debug') && LX.log('debug', LT.add({
       message: 'Save top message',
       recyclebin: binName
     }).toMessage());
@@ -165,7 +165,7 @@ var Service = function(params) {
     }).catch(function(err) {
       res.status(400).json(err);
     }).finally(function() {
-      LX.isEnabledFor('debug') && LX.log('debug', LT.add({
+      LX.has('debug') && LX.log('debug', LT.add({
         message: 'Save top message - DONE',
         recyclebin: binName
       }).toMessage());
