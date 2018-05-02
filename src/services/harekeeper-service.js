@@ -1,27 +1,32 @@
 'use strict';
 
-var events = require('events');
-var util = require('util');
-var path = require('path');
-var Devebot = require('devebot');
-var Promise = Devebot.require('bluebird');
-var lodash = Devebot.require('lodash');
-var debugx = Devebot.require('pinbug')('app-harekeeper:service');
+const Devebot = require('devebot');
+const Promise = Devebot.require('bluebird');
+const chores = Devebot.require('chores');
+const lodash = Devebot.require('lodash');
+const path = require('path');
+const util = require('util');
 
-var Service = function(params) {
-  debugx.enabled && debugx(' + constructor begin ...');
-
+function HarekeeperService(params) {
   params = params || {};
 
-  var self = this;
+  let self = this;
+  let LX = params.loggingFactory.getLogger();
+  let LT = params.loggingFactory.getTracer();
+  let packageName = params.packageName || 'app-harekeeper';
+  let blockRef = chores.getBlockRef(__filename, packageName);
 
-  var LX = params.loggingFactory.getLogger();
-  var LT = params.loggingFactory.getTracer();
+  LX.has('silly') && LX.log('silly', LT.toMessage({
+    tags: [ blockRef, 'constructor-begin' ],
+    text: ' + constructor start ...'
+  }));
 
-  var recyclerStore = params.harekeeperTrigger.recyclerStore;
+  let webweaverService = params["app-webweaver/webweaverService"];
 
-  var assertRecycler = function(recyclerName) {
-    var recycler = lodash.get(recyclerStore, [recyclerName, 'handler']);
+  let recyclerStore = params.harekeeperTrigger.recyclerStore;
+
+  let assertRecycler = function(recyclerName) {
+    let recycler = lodash.get(recyclerStore, [recyclerName, 'handler']);
     if (!recycler) return Promise.reject({
       message: 'Recyclebin not found',
       recyclebin: reecyclerName
@@ -29,30 +34,31 @@ var Service = function(params) {
     return Promise.resolve(recycler);
   }
 
-  var pluginCfg = lodash.get(params, ['sandboxConfig'], {});
-  var contextPath = pluginCfg.contextPath || '/harekeeper';
-  var uniqueField = pluginCfg.idFieldName || 'requestId';
-  var includedProperties = lodash.isArray(pluginCfg.includedProperties) ?
+  let pluginCfg = lodash.get(params, ['sandboxConfig'], {});
+  let contextPath = pluginCfg.contextPath || '/harekeeper';
+  let uniqueField = pluginCfg.idFieldName || 'requestId';
+  let includedProperties = lodash.isArray(pluginCfg.includedProperties) ?
       pluginCfg.includedProperties : null;
-  var excludedProperties = lodash.isArray(pluginCfg.excludedProperties) ?
+  let excludedProperties = lodash.isArray(pluginCfg.excludedProperties) ?
       pluginCfg.excludedProperties : null;
 
-  var express = params.webweaverService.express;
-  var router = express.Router();
+  let express = webweaverService.express;
+  let router = express.Router();
 
   router.route('/').get(function(req, res, next) {
     res.json(lodash.map(lodash.keys(recyclerStore), function(name) {
-      var handlerInfo = lodash.omit(recyclerStore[name], ['handler']);
+      let handlerInfo = lodash.omit(recyclerStore[name], ['handler']);
       return handlerInfo;
     }));
   });
 
   router.route('/:recyclebin').get(function(req, res, next) {
-    debugx.enabled && debugx(' - GET [%s]', req.url);
     LX.has('debug') && LX.log('debug', LT.add({
-      message: 'Get recyclebin information',
+      url: req.url,
       recyclebin: req.params.recyclebin
-    }).toMessage());
+    }).toMessage({
+      text: 'Get recyclebin information, url: ${url}'
+    }));
     assertRecycler(req.params.recyclebin).then(function(recycler) {
       return recycler.checkRecyclebin();
     }).then(function(info) {
@@ -61,21 +67,23 @@ var Service = function(params) {
       res.status(400).json(err);
     }).finally(function() {
       LX.has('debug') && LX.log('debug', LT.add({
-        message: 'Get recyclebin information - DONE',
         recyclebin: req.params.recyclebin
-      }).toMessage());
+      }).toMessage({
+        text: 'Get recyclebin information - DONE'
+      }));
     });
   });
 
-  var topMsgRoute = router.route('/:recyclebin/top');
+  let topMsgRoute = router.route('/:recyclebin/top');
 
   topMsgRoute.get(function(req, res, next) {
-    var binName = req.params.recyclebin;
-    var garbageMsg = {};
+    let binName = req.params.recyclebin;
+    let garbageMsg = {};
     LX.has('debug') && LX.log('debug', LT.add({
-      message: 'Load top message',
       recyclebin: binName
-    }).toMessage());
+    }).toMessage({
+      text: 'Load top message'
+    }));
     assertRecycler(binName).then(function(recycler) {
       return recycler.examine(function(msg, update) {
         // extract more data
@@ -94,26 +102,33 @@ var Service = function(params) {
           garbageMsg.__format__ = 'text';
         }
         // logging information
-        debugx.enabled && debugx('contentType: %s', garbageMsg.__format__);
+        LX.has('silly') && LX.log('silly', LT.add({
+          garbageFormat: garbageMsg.__format__
+        }).toMessage({
+          text: 'garbage format: ${garbageFormat}'
+        }));
         update('restore');
       });
     }).then(function(output) {
       garbageMsg.__output__ = output;
-      debugx.enabled && debugx(' - examine() output: %s', JSON.stringify(output));
+      LX.has('debug') && LX.log('debug', LT.add({ output }).toMessage({
+        text: ' - examine() output: ${output}'
+      }));
       res.json(garbageMsg);
     }).catch(function(err) {
       res.status(400).json(err);
     }).finally(function() {
       LX.has('debug') && LX.log('debug', LT.add({
-        message: 'Load top message - DONE',
         recyclebin: binName
-      }).toMessage());
+      }).toMessage({
+        text: 'Load top message - DONE'
+      }));
     });
   });
 
   topMsgRoute.put(function(req, res, next) {
-    var payload = req.body || {};
-    var newId = lodash.get(payload, ['properties', 'headers', uniqueField]);
+    let payload = req.body || {};
+    let newId = lodash.get(payload, ['properties', 'headers', uniqueField]);
     if (lodash.isEmpty(newId) && !payload.forced) {
       res.status(403).json({
         message: 'Invalid updating message object. ID field must not be empty',
@@ -122,18 +137,19 @@ var Service = function(params) {
       return;
     }
 
-    var binName = req.params.recyclebin;
+    let binName = req.params.recyclebin;
     LX.has('debug') && LX.log('debug', LT.add({
-      message: 'Save top message',
       recyclebin: binName
-    }).toMessage());
+    }).toMessage({
+      text: 'Save top message'
+    }));
 
-    var updatingFailed = null;
+    let updatingFailed = null;
     assertRecycler(binName).then(function(recycler) {
       return recycler.examine(function(msg, update) {
-        var oldId = lodash.get(msg, ['properties', 'headers', uniqueField]);
+        let oldId = lodash.get(msg, ['properties', 'headers', uniqueField]);
         if (oldId == newId || (lodash.isEmpty(oldId) && payload.forced)) {
-          var newPayload = {
+          let newPayload = {
             properties: payload.properties,
             content: payload.content
           }
@@ -156,8 +172,10 @@ var Service = function(params) {
       });
     }).then(function(info) {
       if (lodash.isEmpty(updatingFailed)) {
-        var result = lodash.assign({}, info);
-        debugx.enabled && debugx(' - examine() result: %s', JSON.stringify(result));
+        let result = lodash.assign({}, info);
+        LX.has('debug') && LX.log('debug', LT.add({ result }).toMessage({
+          text: ' - examine() output: ${result}'
+        }));
         res.json(result);
       } else {
         res.status(400).json(updatingFailed);
@@ -166,9 +184,10 @@ var Service = function(params) {
       res.status(400).json(err);
     }).finally(function() {
       LX.has('debug') && LX.log('debug', LT.add({
-        message: 'Save top message - DONE',
         recyclebin: binName
-      }).toMessage());
+      }).toMessage({
+        text: 'Save top message - DONE'
+      }));
     });
   });
 
@@ -180,15 +199,21 @@ var Service = function(params) {
     }
   }
 
-  params.webweaverService.push([
-    params.webweaverService.getDefaultRedirectLayer(),
-    params.webweaverService.getJsonBodyParserLayer(),
+  webweaverService.push([
+    webweaverService.getDefaultRedirectLayer(),
+    webweaverService.getJsonBodyParserLayer(),
     self.getRestRouterLayer()
   ], pluginCfg.priority);
 
-  debugx.enabled && debugx(' - constructor end!');
+  LX.has('silly') && LX.log('silly', LT.toMessage({
+    tags: [ blockRef, 'constructor-end' ],
+    text: ' - constructor end!'
+  }));
 };
 
-Service.referenceList = [ "webweaverService", "harekeeperTrigger" ];
+HarekeeperService.referenceList = [
+  "harekeeperTrigger",
+  "app-webweaver/webweaverService"
+];
 
-module.exports = Service;
+module.exports = HarekeeperService;

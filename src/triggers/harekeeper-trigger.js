@@ -1,30 +1,35 @@
 'use strict';
 
-var Devebot = require('devebot');
-var Promise = Devebot.require('bluebird');
-var lodash = Devebot.require('lodash');
-var debugx = Devebot.require('pinbug')('app-harekeeper:trigger');
-var opflow = require('opflow');
+const Devebot = require('devebot');
+const Promise = Devebot.require('bluebird');
+const chores = Devebot.require('chores');
+const lodash = Devebot.require('lodash');
+const opflow = require('opflow');
 
-var Service = function(params) {
-  debugx.enabled && debugx(' + constructor begin ...');
-
+function HarekeeperTrigger(params) {
   params = params || {};
 
-  var self = this;
+  let self = this;
+  let LX = params.loggingFactory.getLogger();
+  let LT = params.loggingFactory.getTracer();
+  let packageName = params.packageName || 'app-harekeeper';
+  let blockRef = chores.getBlockRef(__filename, packageName);
 
-  var LX = params.loggingFactory.getLogger();
-  var LT = params.loggingFactory.getTracer();
+  LX.has('silly') && LX.log('silly', LT.toMessage({
+    tags: [ blockRef, 'constructor-begin' ],
+    text: ' + constructor start ...'
+  }));
 
-  var recyclerCfg = lodash.get(params, ['sandboxConfig', 'recycler'], {});
-  var recyclerStore = {};
+  let recyclerCfg = lodash.get(params, ['sandboxConfig', 'recycler'], {});
+  let recyclerStore = {};
   
   lodash.forOwn(recyclerCfg, function(config, name) {
     if (lodash.isObject(config) && !lodash.isEmpty(config) && config.enabled !== false) {
       LX.has('debug') && LX.log('debug', LT.add({
-        message: 'Register a recycler handler',
         recyclerName: name
-      }).toMessage({reset: true}));
+      }).toMessage({
+        text: 'Register a recycler handler'
+      }));
       recyclerStore[name] = {
         name: name,
         description: lodash.get(config, ['__metadata', 'description']),
@@ -36,9 +41,10 @@ var Service = function(params) {
   Object.defineProperty(self, 'recyclerStore', {
     get: function() {
       LX.has('debug') && LX.log('debug', LT.add({
-        message: 'Get recyclerStore',
         recyclerNames: lodash.keys(recyclerStore)
-      }).toMessage());
+      }).toMessage({
+        text: 'Get recyclerStore'
+      }));
       return lodash.clone(recyclerStore);
     },
     set: function(val) {}
@@ -56,7 +62,10 @@ var Service = function(params) {
     });
   };
 
-  debugx.enabled && debugx(' - constructor end!');
+  LX.has('silly') && LX.log('silly', LT.toMessage({
+    tags: [ blockRef, 'constructor-end' ],
+    text: ' - constructor end!'
+  }));
 };
 
-module.exports = Service;
+module.exports = HarekeeperTrigger;
