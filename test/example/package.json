@@ -1,0 +1,14 @@
+{
+  "name": "app-harekeeper-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "apporo",
+  "license": "ISC",
+  "dependencies": {
+    "app-jsoneditor": "^0.2.1"
+  }
+}

@@ -1,7 +1,0 @@
-{
-  "apps": [{
-    "name": "app-harekeeper-lab",
-    "script": "test/app",
-    "watch": true
-  }]
-}
