@@ -21,9 +21,10 @@ function HarekeeperService(params) {
     text: ' + constructor start ...'
   }));
 
+  let harekeeperTrigger = params["harekeeperTrigger"];
   let webweaverService = params["app-webweaver/webweaverService"];
 
-  let recyclerStore = params.harekeeperTrigger.recyclerStore;
+  let recyclerStore = harekeeperTrigger.recyclerStore;
 
   let assertRecycler = function(recyclerName) {
     let recycler = lodash.get(recyclerStore, [recyclerName, 'handler']);
@@ -82,7 +83,7 @@ function HarekeeperService(params) {
     LX.has('debug') && LX.log('debug', LT.add({
       recyclebin: binName
     }).toMessage({
-      text: 'Load top message'
+      text: 'Load top message of "${recyclebin}"'
     }));
     assertRecycler(binName).then(function(recycler) {
       return recycler.examine(function(msg, update) {
@@ -121,7 +122,7 @@ function HarekeeperService(params) {
       LX.has('debug') && LX.log('debug', LT.add({
         recyclebin: binName
       }).toMessage({
-        text: 'Load top message - DONE'
+        text: 'Load top message of "${recyclebin}" - DONE'
       }));
     });
   });
@@ -141,7 +142,7 @@ function HarekeeperService(params) {
     LX.has('debug') && LX.log('debug', LT.add({
       recyclebin: binName
     }).toMessage({
-      text: 'Save top message'
+      text: 'Save top message of "${recyclebin}"'
     }));
 
     let updatingFailed = null;
@@ -186,7 +187,7 @@ function HarekeeperService(params) {
       LX.has('debug') && LX.log('debug', LT.add({
         recyclebin: binName
       }).toMessage({
-        text: 'Save top message - DONE'
+        text: 'Save top message of "${recyclebin}" - DONE'
       }));
     });
   });

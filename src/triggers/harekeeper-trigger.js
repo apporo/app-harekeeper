@@ -25,10 +25,8 @@ function HarekeeperTrigger(params) {
   
   lodash.forOwn(recyclerCfg, function(config, name) {
     if (lodash.isObject(config) && !lodash.isEmpty(config) && config.enabled !== false) {
-      LX.has('debug') && LX.log('debug', LT.add({
-        recyclerName: name
-      }).toMessage({
-        text: 'Register a recycler handler'
+      LX.has('debug') && LX.log('debug', LT.add({ name }).toMessage({
+        text: 'Register a recycler: ${name}'
       }));
       recyclerStore[name] = {
         name: name,
@@ -43,7 +41,7 @@ function HarekeeperTrigger(params) {
       LX.has('debug') && LX.log('debug', LT.add({
         recyclerNames: lodash.keys(recyclerStore)
       }).toMessage({
-        text: 'Get recyclerStore'
+        text: 'Get recyclerStore collection (${recyclerNames})'
       }));
       return lodash.clone(recyclerStore);
     },
